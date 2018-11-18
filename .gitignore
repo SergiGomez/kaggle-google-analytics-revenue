@@ -1,4 +1,5 @@
 *.csv
 *.Rhistory
 *.ipynb*
-training_notebook*
+*/.ipynb_checkpoints/*
+*/.ipynb/*

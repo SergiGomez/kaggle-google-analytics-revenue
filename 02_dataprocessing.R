@@ -60,8 +60,9 @@ convertFormatVars <- function(dt,
   }
   
   if (!is.null(timeVars)) {
+    
     # converting visit start times to POSIXct
-    dt[, (timeVars) := lapply(.SD, as.POSIXct, tz="UTC", origin='1970-01-01'),
+    dt[, (timeVars) := lapply(.SD, funDate),
        .SDcols = timeVars]
   }
 
@@ -108,6 +109,11 @@ dataProcessing <- function(dt, set = 'train', listVarsToKeep = NULL) {
   varsDtOrig <- copy(colnames(dt))
   
   if (set == 'train') {
+    
+    # Target Variable: transactionRevenue
+    # setting missing values to zero
+    dt[ is.na(transactionRevenue), transactionRevenue := as.numeric(0) ]
+    
     # ------- Treatment of Missing Values --------
     dtMissings <- countMissings(dt)
     # All those variables with more than 95% of missings are discarded
@@ -116,14 +122,10 @@ dataProcessing <- function(dt, set = 'train', listVarsToKeep = NULL) {
     gc() 
   
     # ------------- 1 unique value ---------------
-     only1Value <- colnames(dt)[apply(dt, 2, function(x) length(unique(x))) == 1]
+    only1Value <- colnames(dt)[apply(dt, 2, function(x) length(unique(x))) == 1]
     # These variables have only 1 unique value, hence can be removed
     dt[, (only1Value) := NULL]
     gc()
-  
-    # Target Variable: transactionRevenue
-    # setting missing values to zero
-    dt[ is.na(transactionRevenue), transactionRevenue := 0 ]
     
   } else if (set == 'test') {
     dt <- as.data.table(dt[, listVarsToKeep, with = FALSE])
@@ -225,10 +227,15 @@ printChangeFeatures <- function(dt, varsDtOrig){
   
   if (length(colnames(dt)) != length(varsDtOrig)) {
     
-    moreFeats <- max(length(colnames(dt)), length(varsDtOrig))
-    minFeats <- min(length(colnames(dt)), length(varsDtOrig))
-    
-    newFeats <- moreFeats[!moreFeats %in% minFeats]
-    cat("New Features: ", paste0(newFeats, sep = "-"))
+    if (length(colnames(dt)) > length(varsDtOrig)) {
+      newFeats <- colnames(dt)[!colnames(dt) %in% varsDtOrig]
+    } else {
+      newFeats <- varsDtOrig[!varsDtOrig %in% colnames(dt)]
+    }
+    cat("New or Old Features: ", paste0(newFeats, sep = "-"))
   }
+}
+
+funDate <- function(x) {
+  as.Date(strptime(x, format = '%Y%m%d'))
 }

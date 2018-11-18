@@ -7,7 +7,11 @@ dt_test <- as.data.table(read.csv(paste0(path.data,'test.csv')))
 # ---- Data Pre-processing ----
 dt_train <- jsonToDt(dt_train)
 dt_test <- jsonToDt(dt_test)
+
+dt_train_orig <- copy(dt_train)
+
 dt_train <- convertFormatVars(dt = dt_train,
+                              numVars = 'transactionRevenue',
                               timeVars = 'date')
 dt_test <- convertFormatVars(dt = dt_test,
                               timeVars = 'date')
@@ -27,7 +31,11 @@ dt_test <- featureExtraction(dt_test)
 dt_train <- dataProcessing(dt_train)
 dt_test <- dataProcessing(dt_test)
 
-write.csv(dt_train,'train_set_processed.csv')
+# --- sampling to reduce memory usage ---
+set.seed(123)
+dt_train_sample <- dt_train[, .SD[sample(.N, round(.N*0.1))]]
+
+write.csv(dt_train_sample,'train_set_processed.csv')
 write.csv(dt_test,'test_set_processed.csv')
 
 

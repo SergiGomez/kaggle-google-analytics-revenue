@@ -5,11 +5,7 @@ import sys
 import datetime as dt
 import os
 
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-
-import category_encoders
 
 import modelling_utils as mu
 
@@ -30,6 +26,18 @@ catVarsDict = {'channelGrouping' : 'BinaryEncoder',
                'source': 'LabelEncoder',
                'medium': 'LabelEncoder',
                'sourceMedium': 'LabelEncoder'}
+
+params_lgb = {
+        "objective" : "regression",
+        "metric" : "rmse",
+        "num_leaves" : 40,
+        "learning_rate" : 0.005,
+        "bagging_fraction" : 0.6,
+        "feature_fraction" : 0.6,
+        "bagging_frequency" : 6,
+        "bagging_seed" : 42,
+        "verbosity" : -1,
+        "seed": 42}
 
 todayDate = dt.datetime.today().date()
 todayDateJoined = dt.datetime.today().strftime('%Y%m%d')
@@ -52,10 +60,11 @@ test[target_var]= 0
 all = pd.concat([train,test],axis=0)
 print('\nAll Data shape: {} Rows, {} Columns'.format(*all.shape))
 
-print("Categorical variables: " + list(all.select_dtypes(include=['object'])))
-train = mu.processingPreModelling(df = all, catVarsDict = catVarsDict)
+print("Categorical variables: " + str(list(all.select_dtypes(include=['object']))))
+all = mu.processingPreModelling(df = all, catVarsDict = catVarsDict)
 if len(list(all.select_dtypes(include=['object']))) > 0:
-    print("There are still some categorical variables after Processing!")
+    print("Remaining these categorical variables after Processing! " +
+            str(list(all.select_dtypes(include=['object']))))
 
 
 print("-- Training Done --")

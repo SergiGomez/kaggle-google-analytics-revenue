@@ -52,8 +52,10 @@ test[target_var]= 0
 all = pd.concat([train,test],axis=0)
 print('\nAll Data shape: {} Rows, {} Columns'.format(*all.shape))
 
-print(list(all))
-
+print("Categorical variables: " + list(all.select_dtypes(include=['object'])))
 train = mu.processingPreModelling(df = all, catVarsDict = catVarsDict)
+if len(list(all.select_dtypes(include=['object']))) > 0:
+    print("There are still some categorical variables after Processing!")
+
 
 print("-- Training Done --")

@@ -15,6 +15,22 @@ import modelling_utils as mu
 
 target_var = 'transactionRevenue'
 
+catVarsDict = {'channelGrouping' : 'BinaryEncoder',
+               'browser': 'LabelEncoder',
+               'operatingSystem': 'LabelEncoder',
+               'deviceCategory': 'OneHot',
+               'continent': 'BinaryEncoder',
+               'subContinent': 'LabelEncoder',
+               'country': 'LabelEncoder',
+               'region': 'LabelEncoder',
+               'metro': 'LabelEncoder',
+               'city': 'LabelEncoder',
+               'networkDomain': 'LabelEncoder',
+               'campaign': 'LabelEncoder',
+               'source': 'LabelEncoder',
+               'medium': 'LabelEncoder',
+               'sourceMedium': 'LabelEncoder'}
+
 todayDate = dt.datetime.today().date()
 todayDateJoined = dt.datetime.today().strftime('%Y%m%d')
 
@@ -38,6 +54,6 @@ print('\nAll Data shape: {} Rows, {} Columns'.format(*all.shape))
 
 print(list(all))
 
-train = mu.processingPreModelling(df = all)
+train = mu.processingPreModelling(df = all, catVarsDict = catVarsDict)
 
 print("-- Training Done --")

@@ -31,34 +31,21 @@ dt_test <- featureExtraction(dt_test)
 dt_train <- dataProcessing(dt_train)
 dt_test <- dataProcessing(dt_test)
 
+# Order by date
+setorder(dt_train, date) 
+
 # --- sampling to reduce memory usage ---
 set.seed(123)
 dt_train_sample <- dt_train[, .SD[sample(.N, round(.N*0.1))]]
 
-write.csv(dt_train_sample,'train_set_processed.csv')
-write.csv(dt_test,'test_set_processed.csv')
+dt_train_sample[, set := sample(c(1,0), size = nrow(dt_train_sample),
+                                   replace = TRUE,prob = c(0.8,0.2))]
+
+dt_train_processed <- dt_train_sample[set == 1] [, set := NULL]
+dt_test_processed <- dt_train_sample[set == 0] [, set := NULL]
+
+write.csv(dt_train_processed,'train_set_processed.csv')
+write.csv(dt_test_processed,'test_set_processed.csv')
 
 
-# Restore target to its natural value 
-dt_train[, transactionRevenue := transactionRevenue*1000000]
 
-# Order by date
-setorder(dt_train, date) 
-
-# changing fullvisitorid to normal number
-dtVisitorID <- data.table(fullVisitorId  = unique(dt_train$fullVisitorId))
-dtVisitorID[, visitorId := 1:.N]
-dt_train <- merge(dt_train,
-                  dtVisitorID, 
-                  by = "fullVisitorId",
-                  all.x = TRUE)
-dt_train[, fullVisitorId := NULL]
-
-
-apply(dt_train, 2, function(x) length(unique(x)))
-
-dtNetDomain <- dt_train[,.(n = .N,
-                           pct_sess  = .N*100/nrow(dt_train),
-                           rev = sum(transactionRevenue/1e6),
-                           pct_rev = sum(transactionRevenue/1e6)*100 /totRevs), .(networkDomain)][order(-pct_rev)]
-dtNetDomain[pct_rev > 0.5]

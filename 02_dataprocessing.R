@@ -139,6 +139,25 @@ dataProcessing <- function(dt, set = 'train', listVarsToKeep = NULL) {
   
   printChangeFeatures(dt, varsDtOrig)
   
+  
+  # # changing fullvisitorid to normal number
+  # dtVisitorID <- data.table(fullVisitorId  = unique(dt_train$fullVisitorId))
+  # dtVisitorID[, visitorId := 1:.N]
+  # dt_train <- merge(dt_train,
+  #                   dtVisitorID, 
+  #                   by = "fullVisitorId",
+  #                   all.x = TRUE)
+  # dt_train[, fullVisitorId := NULL]
+  # 
+  # 
+  # apply(dt_train, 2, function(x) length(unique(x)))
+  # 
+  # dtNetDomain <- dt_train[,.(n = .N,
+  #                            pct_sess  = .N*100/nrow(dt_train),
+  #                            rev = sum(transactionRevenue/1e6),
+  #                            pct_rev = sum(transactionRevenue/1e6)*100 /totRevs), .(networkDomain)][order(-pct_rev)]
+  # dtNetDomain[pct_rev > 0.5]
+  
   return(dt)
 
 }

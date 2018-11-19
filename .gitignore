@@ -1,5 +1,8 @@
 *.csv
 *.Rhistory
-*.ipynb*
+ipynb/*
 */.ipynb_checkpoints/*
+.ipynb_checkpoints
 */.ipynb/*
+*.log
+__pycache__/

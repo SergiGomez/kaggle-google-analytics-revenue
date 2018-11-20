@@ -8,8 +8,11 @@ import os
 from sklearn.model_selection import train_test_split
 
 import modelling_utils as mu
+import lightgbm as lgb
 
 target_var = 'transactionRevenue'
+
+model_name = 'lgb'
 
 catVarsDict = {'channelGrouping' : 'BinaryEncoder',
                'browser': 'LabelEncoder',
@@ -66,5 +69,20 @@ if len(list(all.select_dtypes(include=['object']))) > 0:
     print("Remaining these categorical variables after Processing! " +
             str(list(all.select_dtypes(include=['object']))))
 
+# Prepare the training data set
+train_all = all.loc[all['set'] == 'train']
+X = train_all
+y = train_all[target_var]
+X = X.drop([target_var, 'set', 'sessionId', 'date'], axis=1)
+train_X, val_X, train_y, val_y = train_test_split(X, y,
+                                                test_size=0.15, random_state=1)
+
+# Prepare the test data set
+test_X = all.loc[all['set'] == 'test']
+test_X = test_X.drop([target_var, 'set', 'sessionId', 'date'], axis=1)
+
+print('\n Training set shape: {} Rows, {} Columns'.format(*train_X.shape))
+print('\n Validation set shape: {} Rows, {} Columns'.format(*val_X.shape))
+print('\n Test set shape: {} Rows, {} Columns'.format(*test_X.shape))
 
 print("-- Training Done --")

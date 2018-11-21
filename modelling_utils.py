@@ -2,10 +2,14 @@ import pandas as pd
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.metrics import mean_squared_error
 
 import lightgbm as lgb
 
 import category_encoders
+
+def rmse(y_true, y_pred):
+    return round(np.sqrt(mean_squared_error(y_true, y_pred)), 5)
 
 def processingPreModelling(df, catVarsDict = {}):
 
@@ -35,20 +39,29 @@ def processingPreModelling(df, catVarsDict = {}):
 
     return df
 
-def run_lgb(X_train, y_train, X_val, y_val, X_test, params_lgb = {}):
+def do_training(train_X, train_y, val_X, val_y, model_name, params):
 
-    lgb_train_data = lgb.Dataset(X_train, label=y_train)
-    lgb_val_data = lgb.Dataset(X_val, label=y_val)
+    if model_name == 'lgb':
 
-    model = lgb.train(params, lgb_train_data,
-                      num_boost_round=5000,
-                      valid_sets=[lgb_train_data, lgb_val_data],
-                      early_stopping_rounds=100,
-                      verbose_eval=500)
+        lgb_train = lgb.Dataset(train_X, label = train_y)
+        lgb_val = lgb.Dataset(val_X, label = val_y)
 
-    y_pred_train = model.predict(X_train, num_iteration=model.best_iteration)
-    y_pred_val = model.predict(X_val, num_iteration=model.best_iteration)
-    y_pred_submit = model.predict(X_test, num_iteration=model.best_iteration)
+        model = lgb.train(params,
+                          lgb_train,
+                          num_boost_round=500,
+                          valid_sets=[lgb_train, lgb_val],
+                          early_stopping_rounds=100,
+                          verbose_eval=50)
 
-    print(f"LGBM: RMSE val: {rmse(y_val, y_pred_val)}  - RMSE train: {rmse(y_train, y_pred_train)}")
-    return y_pred_submit, model
+        train_y_pred = model.predict(train_X, num_iteration = model.best_iteration)
+        val_y_pred = model.predict(val_X, num_iteration = model.best_iteration)
+        print(f"LGBM: RMSE val: {rmse(val_y, val_y_pred)}  - RMSE train: {rmse(train_y, train_y_pred)}")
+
+    return model
+
+def prepare_submission(test_X, test_y_pred, filename = 'submit.csv'):
+
+    submission = test_X[['fullVisitorId']].copy()
+    submission.loc[:, 'PredictedLogRevenue'] = test_y_pred
+    grouped_submission = submission[['fullVisitorId', 'PredictedLogRevenue']].groupby('fullVisitorId').sum().reset_index()
+    grouped_submission.to_csv(filename,index=False)    

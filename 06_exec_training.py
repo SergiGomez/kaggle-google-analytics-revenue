@@ -73,16 +73,28 @@ if len(list(all.select_dtypes(include=['object']))) > 0:
 train_all = all.loc[all['set'] == 'train']
 X = train_all
 y = train_all[target_var]
+y = y.apply(lambda x: np.log1p(x))
 X = X.drop([target_var, 'set', 'sessionId', 'date'], axis=1)
 train_X, val_X, train_y, val_y = train_test_split(X, y,
                                                 test_size=0.15, random_state=1)
 
 # Prepare the test data set
-test_X = all.loc[all['set'] == 'test']
-test_X = test_X.drop([target_var, 'set', 'sessionId', 'date'], axis=1)
+test_X_orig = all.loc[all['set'] == 'test']
+test_X = test_X_orig.drop([target_var, 'set', 'sessionId', 'date'], axis=1) = all.loc[all['set'] == 'test']
+test_X = test_X_orig.drop([target_var, 'set', 'sessionId', 'date'], axis=1)
 
 print('\n Training set shape: {} Rows, {} Columns'.format(*train_X.shape))
 print('\n Validation set shape: {} Rows, {} Columns'.format(*val_X.shape))
 print('\n Test set shape: {} Rows, {} Columns'.format(*test_X.shape))
 
+# Training
+model = mu.do_training(train_X, train_y, val_X, val_y, model_name, params = params_lgb)
 print("-- Training Done --")
+
+# Scoring
+test_y_pred = model.predict(test_X, num_iteration=model.best_iteration)
+print("-- Scoring Done --")
+
+# Preparing submission
+mu.prepare_submission(test_X_orig, test_y_pred)
+print("-- Submission file Ready --")
